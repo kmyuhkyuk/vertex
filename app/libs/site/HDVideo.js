@@ -3,9 +3,9 @@ const moment = require('moment');
 
 class Site {
   constructor () {
-    this.name = 'LemonHD';
-    this.downloadLink = 'https://lemonhd.net/download.php?id={ID}';
-    this.url = 'https://lemonhd.net/';
+    this.name = 'HDVideo';
+    this.downloadLink = 'https://hdvideo.top/download.php?id={ID}';
+    this.url = 'https://hdvideo.top/';
   };
 
   async getInfo () {
