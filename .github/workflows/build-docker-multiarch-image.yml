@@ -1,0 +1,79 @@
+name: Build Docker Multiarch Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: 'npm'
+      - name: Install Dependencies
+        run: |
+          npm i --save-dev
+          cd webui
+          npm i --legacy-peer-deps --save-dev
+      - name: Eslint
+        run: |
+          npm run eslint
+          cd webui
+          npm run eslint
+      - name: Prepare Theme Files
+        working-directory: ./webui
+        run: |
+          mkdir ./public/assets/styles
+          node dark
+          node light
+          node cyber
+          echo '@import url(/api/setting/getBackground.less);' >> ./public/assets/styles/cyber.less
+          echo '.body-bg {' >> ./public/assets/styles/cyber.less
+          echo '  background:@vt-bg-image;' >> ./public/assets/styles/cyber.less
+          echo '  background-position-x:center;' >> ./public/assets/styles/cyber.less
+          echo '  background-position-y:center;' >> ./public/assets/styles/cyber.less
+          echo '  background-size:cover;' >> ./public/assets/styles/cyber.less
+          echo '}' >> ./public/assets/styles/cyber.less
+          echo '' >> ./public/assets/styles/cyber.less
+          echo '.login-layout {' >> ./public/assets/styles/cyber.less
+          echo '  background:@body-background;' >> ./public/assets/styles/cyber.less
+          echo '}' >> ./public/assets/styles/cyber.less
+          echo '' > ./public/assets/styles/follow.less
+      - name: Build Static Files
+        working-directory: ./webui
+        run: |
+          npm run build
+      - name: Prepare Docker Env
+        run: |
+          mkdir docker/src
+          mv app/static docker/src
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker
+          file: ./docker/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          no-cache: true
+          cache-from: type=registry,ref=kmyuhkyuk/vertex:latest
+          cache-to: type=inline
+          tags: |
+            kmyuhkyuk/vertex:latest

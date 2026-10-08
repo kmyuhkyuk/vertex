@@ -1,13 +1,13 @@
-FROM lswl/vertex-base:latest
+FROM kmyuhkyuk/vertex-base-alpine
 LABEL maintainer="lswl.in"
-LABEL build_from="https://github.com/vertex-app/vertex"
+LABEL build_from="https://github.com/kmyuhkyuk/vertex"
 
 ENV TZ=Asia/Shanghai
 RUN \
   apk add --no-cache gcc g++ python3 git cmake make npm libc-dev && \
-  git clone https://github.com/vertex-app/vertex.git /app/vertex && \
+  git clone https://github.com/kmyuhkyuk/vertex.git /app/vertex && \
   cd /app/vertex && \
-  git checkout COMMIT_ID && \
+  #git checkout COMMIT_ID && \
   rm .git webui -rf && \
   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm i --save && \
   mkdir /vertex && \
